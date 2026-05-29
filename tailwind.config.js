@@ -4,6 +4,11 @@ export default {
   content: ["./index.html", "./src/**/*.{ts,tsx}"],
   theme: {
     extend: {
+      fontFamily: {
+        display: ["'Bebas Neue'", "sans-serif"],
+        mono: ["'Space Mono'", "monospace"],
+        sans: ["'Barlow'", "sans-serif"],
+      },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
@@ -43,6 +48,30 @@ export default {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
+        neon: {
+          green: "#00FF80",
+          amber: "#FFAA00",
+          red: "#FF4444",
+        },
+      },
+      keyframes: {
+        slideUp: {
+          "0%": { opacity: "0", transform: "translateY(16px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        },
+        fadeIn: {
+          "0%": { opacity: "0" },
+          "100%": { opacity: "1" },
+        },
+        pulseAmber: {
+          "0%, 100%": { boxShadow: "0 0 0 0 hsla(40,100%,50%,0)" },
+          "50%": { boxShadow: "0 0 16px 2px hsla(40,100%,50%,0.15)" },
+        },
+      },
+      animation: {
+        "slide-up": "slideUp 0.4s cubic-bezier(0.16,1,0.3,1) forwards",
+        "fade-in": "fadeIn 0.5s ease forwards",
+        "pulse-amber": "pulseAmber 2s ease-in-out infinite",
       },
     },
   },

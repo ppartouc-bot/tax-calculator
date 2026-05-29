@@ -1,6 +1,3 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/lib/utils";
 import { TAX_RATES_2026, type ActivityCategory } from "@/types/tax";
 
@@ -10,153 +7,156 @@ interface TaxBreakdownProps {
 }
 
 const COVERAGE_ITEMS = [
-  "Assurance maladie-maternité",
+  "Maladie-maternité",
   "Retraite de base",
   "Retraite complémentaire",
-  "Allocations familiales",
+  "Alloc. familiales",
   "Invalidité-décès",
   "CSG/CRDS",
 ] as const;
+
+function RateCell({ label, value }: { label: string; value: string }) {
+  return (
+    <div
+      className="rounded p-3 space-y-1"
+      style={{ background: "hsl(222 20% 13%)", border: "1px solid hsl(220 18% 16%)" }}
+    >
+      <p className="font-mono text-[9px] tracking-widest uppercase" style={{ color: "hsl(215 10% 38%)" }}>
+        {label}
+      </p>
+      <p className="font-display text-xl leading-none" style={{ color: "hsl(40 100% 60%)" }}>
+        {value}
+      </p>
+    </div>
+  );
+}
 
 export function TaxBreakdown({ activityCategory, revenue }: TaxBreakdownProps) {
   const cotisRate = TAX_RATES_2026.cotisations[activityCategory];
   const vlRate = TAX_RATES_2026.versementLiberatoire[activityCategory];
   const abatRate = TAX_RATES_2026.abattementForfaitaire[activityCategory];
   const caLimit = TAX_RATES_2026.caThresholds[activityCategory];
-
-  const quarterlyCA = revenue / 4;
-  const monthlyCA = revenue / 12;
   const cotisAmount = (revenue * cotisRate) / 100;
   const vlAmount = (revenue * vlRate) / 100;
+  const baseImposable = Math.max(revenue * (1 - abatRate / 100), 305);
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-xl">Comprendre vos taxes</CardTitle>
-        <CardDescription>
-          Détails des taux et couvertures pour votre activité
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        {/* Cotisations sociales */}
+    <div
+      className="rounded-lg border card-ambient"
+      style={{ background: "hsl(220 18% 17%)", borderColor: "hsl(220 18% 18%)" }}
+    >
+      <div
+        className="px-5 py-4"
+        style={{ borderBottom: "1px solid hsl(220 18% 15%)" }}
+      >
+        <span className="font-display text-xl tracking-wider" style={{ color: "hsl(40 100% 60%)" }}>
+          Référence fiscale
+        </span>
+      </div>
+
+      <div className="p-5 space-y-5">
+        {/* ── Cotisations sociales ── */}
         <section className="space-y-3">
-          <div className="flex items-center justify-between">
-            <h3 className="font-semibold text-sm">Cotisations sociales</h3>
-            <Badge variant="secondary">{cotisRate}% du CA</Badge>
+          <div className="divider-label">Cotisations sociales</div>
+          <div className="grid grid-cols-3 gap-2">
+            <RateCell label="Taux" value={`${cotisRate}%`} />
+            <RateCell label="/ mois" value={revenue > 0 ? `${(cotisAmount / 12 / 1000).toFixed(1)}k` : "—"} />
+            <RateCell label="/ trim." value={revenue > 0 ? `${(cotisAmount / 4 / 1000).toFixed(1)}k` : "—"} />
           </div>
-          <div className="rounded-lg bg-muted/50 p-3 space-y-2">
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Annuel</span>
-              <span className="font-medium">{formatCurrency(cotisAmount)}</span>
+          <div className="flex flex-wrap gap-1.5">
+            {COVERAGE_ITEMS.map((item) => (
+              <span
+                key={item}
+                className="font-mono text-[9px] tracking-wider px-2 py-1 rounded"
+                style={{
+                  background: "hsla(222, 40%, 8%, 1)",
+                  color: "hsl(215 10% 45%)",
+                  border: "1px solid hsl(222 22% 14%)",
+                }}
+              >
+                {item}
+              </span>
+            ))}
+          </div>
+        </section>
+
+        {/* ── IR ── */}
+        <section className="space-y-3">
+          <div className="divider-label">Impôt sur le revenu</div>
+          <div className="grid grid-cols-2 gap-2">
+            <div
+              className="rounded p-3 space-y-1.5"
+              style={{ background: "hsl(222 20% 13%)", border: "1px solid hsl(220 18% 16%)" }}
+            >
+              <p className="font-mono text-[9px] tracking-widest uppercase" style={{ color: "hsl(215 10% 38%)" }}>
+                Barème progressif
+              </p>
+              <p className="font-mono text-xs" style={{ color: "hsl(215 18% 72%)" }}>
+                Abatt. <span style={{ color: "hsl(40 100% 60%)" }}>{abatRate}%</span>
+              </p>
+              {revenue > 0 && (
+                <p className="font-mono text-[10px]" style={{ color: "hsl(215 10% 45%)" }}>
+                  Base : {formatCurrency(baseImposable)}
+                </p>
+              )}
+              <p className="font-mono text-[9px]" style={{ color: "hsl(215 10% 38%)" }}>
+                Tranches 0% → 45%
+              </p>
             </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Trimestriel</span>
-              <span>{formatCurrency(cotisAmount / 4)}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Mensuel</span>
-              <span>{formatCurrency(cotisAmount / 12)}</span>
+            <div
+              className="rounded p-3 space-y-1.5"
+              style={{ background: "hsl(222 20% 13%)", border: "1px solid hsl(220 18% 16%)" }}
+            >
+              <p className="font-mono text-[9px] tracking-widest uppercase" style={{ color: "hsl(215 10% 38%)" }}>
+                Versement libératoire
+              </p>
+              <p className="font-mono text-xs" style={{ color: "hsl(215 18% 72%)" }}>
+                Fixe <span style={{ color: "hsl(40 100% 60%)" }}>{vlRate}%</span>
+              </p>
+              {revenue > 0 && (
+                <p className="font-mono text-[10px]" style={{ color: "hsl(215 10% 45%)" }}>
+                  {formatCurrency(vlAmount)} / an
+                </p>
+              )}
+              <p className="font-mono text-[9px]" style={{ color: "hsl(215 10% 38%)" }}>
+                Payé avec cotisations
+              </p>
             </div>
           </div>
+        </section>
+
+        {/* ── Plafond & périodicité ── */}
+        <section className="space-y-2">
+          <div className="divider-label">Plafonds & déclarations</div>
           <div className="space-y-1">
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-              Couverture sociale
-            </p>
-            <div className="flex flex-wrap gap-1.5">
-              {COVERAGE_ITEMS.map((item) => (
-                <span
-                  key={item}
-                  className="text-xs bg-blue-50 text-blue-700 border border-blue-100 rounded px-2 py-0.5"
-                >
-                  {item}
+            {[
+              ["Plafond CA annuel", `${caLimit.toLocaleString("fr-FR")} €`],
+              ["CA moyen / trimestre", revenue > 0 ? formatCurrency(revenue / 4) : "—"],
+              ["CA moyen / mois", revenue > 0 ? formatCurrency(revenue / 12) : "—"],
+              ["Déclaration URSSAF", "Mensuelle ou trimestrielle"],
+              ["Déclaration impôts", "Annuelle — formulaire 2042-C-PRO"],
+            ].map(([label, value]) => (
+              <div
+                key={label}
+                className="flex justify-between items-center py-1.5"
+                style={{ borderBottom: "1px solid hsl(220 18% 15%)" }}
+              >
+                <span className="font-mono text-[10px]" style={{ color: "hsl(215 10% 45%)" }}>
+                  {label}
                 </span>
-              ))}
-            </div>
+                <span className="font-mono text-[10px] font-bold" style={{ color: "hsl(215 18% 72%)" }}>
+                  {value}
+                </span>
+              </div>
+            ))}
           </div>
         </section>
 
-        <Separator />
-
-        {/* Impôt sur le revenu */}
-        <section className="space-y-3">
-          <h3 className="font-semibold text-sm">Impôt sur le revenu</h3>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div className="rounded-lg border p-3 space-y-1">
-              <p className="text-xs text-muted-foreground font-medium">Barème progressif</p>
-              <p className="text-sm">Abattement <strong>{abatRate}%</strong></p>
-              <p className="text-xs text-muted-foreground">
-                Base imposable : {formatCurrency(Math.max(revenue * (1 - abatRate / 100), 305))}
-              </p>
-              <p className="text-xs text-muted-foreground">Tranches 0% → 45%</p>
-            </div>
-            <div className="rounded-lg border p-3 space-y-1">
-              <p className="text-xs text-muted-foreground font-medium">Versement libératoire</p>
-              <p className="text-sm">Taux fixe <strong>{vlRate}%</strong></p>
-              <p className="text-xs text-muted-foreground">
-                Soit : {formatCurrency(vlAmount)} / an
-              </p>
-              <p className="text-xs text-muted-foreground">Payé avec les cotisations</p>
-            </div>
-          </div>
-        </section>
-
-        <Separator />
-
-        {/* Plafonds & périodicité */}
-        <section className="space-y-3">
-          <h3 className="font-semibold text-sm">Plafonds et déclarations</h3>
-          <div className="space-y-2 text-sm">
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Plafond CA annuel</span>
-              <span className="font-medium">{caLimit.toLocaleString("fr-FR")} €</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">CA moyen / trimestre</span>
-              <span>{formatCurrency(quarterlyCA)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">CA moyen / mois</span>
-              <span>{formatCurrency(monthlyCA)}</span>
-            </div>
-          </div>
-          <div className="rounded-lg bg-muted/50 p-3 text-xs text-muted-foreground space-y-1">
-            <p>
-              <strong>Déclaration URSSAF :</strong> mensuelle ou trimestrielle selon votre choix.
-            </p>
-            <p>
-              <strong>Déclaration impôts :</strong> annuelle, avec déclaration 2042-C-PRO.
-            </p>
-          </div>
-        </section>
-
-        <Separator />
-
-        {/* Sources */}
-        <section>
-          <p className="text-xs text-muted-foreground">
-            Taux 2026 — Sources :{" "}
-            <a
-              href="https://www.urssaf.fr"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline hover:text-foreground"
-            >
-              URSSAF
-            </a>
-            ,{" "}
-            <a
-              href="https://www.impots.gouv.fr"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline hover:text-foreground"
-            >
-              impots.gouv.fr
-            </a>
-            . Ce simulateur est indicatif et ne remplace pas un conseil comptable.
-          </p>
-        </section>
-      </CardContent>
-    </Card>
+        {/* ── Sources ── */}
+        <p className="font-mono text-[9px] tracking-wide" style={{ color: "hsl(215 10% 32%)" }}>
+          Sources : URSSAF · impots.gouv.fr · service-public.fr — Indicatif, ne remplace pas un conseil comptable.
+        </p>
+      </div>
+    </div>
   );
 }
